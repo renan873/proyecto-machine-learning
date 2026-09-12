@@ -1,4 +1,4 @@
-# Predicción de la calidad del sueño 
+# Predicción de la calidad del sueño y clasificación de trastornos
 
 Proyecto integrador de **Aprendizaje Automático y Minería de Datos**, Maestría en Gestión y Analítica de Datos.  
 **Docente:** Adriana Collaguazo Jaramillo, Mg.
@@ -11,7 +11,7 @@ Proyecto integrador de **Aprendizaje Automático y Minería de Datos**, Maestrí
 
 ¿Es posible estimar la calidad del sueño a partir de su duración, la frecuencia cardíaca y el nivel de estrés?
 
-El objetivo principal es predecir `Quality of Sleep` mediante **regresión lineal múltiple**. Como análisis complementario, se utiliza **regresión logística** para distinguir registros con trastorno del sueño de registros sin trastorno registrado.
+El objetivo principal es predecir `Quality of Sleep` mediante **regresión lineal múltiple**. Se entrena además un **Random Forest de regresión** para explorar la contribución de las variables con **SHAP**. Como análisis complementario, una **regresión logística** distingue registros con trastorno del sueño de registros sin trastorno registrado.
 
 Son dos tareas diferentes: una predice una puntuación y la otra una categoría. Sus métricas no permiten decidir cuál modelo es mejor que el otro.
 
@@ -19,11 +19,9 @@ Son dos tareas diferentes: una predice una puntuación y la otra una categoría.
 
 **Archivo utilizado:** `Sleep_health_and_lifestyle_dataset.csv`, separado por punto y coma (`;`). La ejecución guardada contiene **374 registros y 14 columnas** antes de crear la variable binaria.
 
-**Referencia pública del dataset:** [Sleep Health and Lifestyle Dataset — Kaggle](https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset).
+**Fuente citada en el notebook:** [Sleep Health and Lifestyle Dataset — Kaggle](https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset).
 
-**Trazabilidad pendiente:** el nombre y las variables coinciden con ese dataset, pero debe confirmarse que fue la fuente de descarga del grupo y registrar su licencia. La versión utilizada tiene la presión arterial separada en dos columnas; para reproducir exactamente los resultados debe publicarse el CSV utilizado, no sustituirlo directamente por otra versión.
-
-El DOI incluido en el notebook, [10.1186/s12888-026-08081-2](https://doi.org/10.1186/s12888-026-08081-2), corresponde a un estudio con 596 pacientes mayores con dolor crónico; no documenta la procedencia de esta tabla de 374 registros.
+La descripción del notebook menciona 400 filas y 13 columnas, pero la carga ejecutada devuelve **374 filas y 14 columnas**; estas últimas son las dimensiones utilizadas en este README. La presión arterial aparece separada en dos columnas. Para reproducir los resultados debe compartirse el CSV exacto utilizado y registrar la licencia de la fuente.
 
 | Variable utilizada | Función en el proyecto |
 |---|---|
@@ -75,6 +73,22 @@ La calidad del sueño varía entre 4 y 9 puntos: existe variación que el modelo
 La clase 1 se interpreta aquí como **sin trastorno registrado**, siempre que se confirme que esos `NaN` provienen de la categoría original de ausencia de trastorno. Un dato desconocido no debe convertirse automáticamente en ausencia de enfermedad. Los nombres del reporte y de la matriz del notebook están invertidos respecto al código.
 
 ## 5. Modelos y resultados
+
+### Random Forest y SHAP: contribución de las variables
+
+Antes de ajustar la regresión lineal, se entrena un `RandomForestRegressor` con los mismos tres predictores y los mismos 280 registros de entrenamiento. Se configura con `n_estimators=300`, `min_samples_leaf=2`, `random_state=42` y `n_jobs=-1`.
+
+SHAP utiliza entrenamiento como referencia (`Independent`, `max_samples=280`) y explica las predicciones de los 94 registros de prueba. El notebook presenta un gráfico de barras, un gráfico de distribución de contribuciones y el siguiente ranking:
+
+| Variable | Media del valor absoluto SHAP |
+|---|---:|
+| Duración del sueño (`Sleep Duration`) | 0,751198 |
+| Estrés (`Stress Level`) | 0,345518 |
+| Frecuencia cardíaca (`Heart Rate`) | 0,072697 |
+
+**Lectura:** la duración del sueño presenta la mayor contribución media a las predicciones del bosque, seguida del estrés. La frecuencia cardíaca aporta menos en este ajuste. Estos valores están en puntos de la salida del modelo, no son porcentajes ni efectos causales. Al ser valores absolutos, la tabla no indica por sí sola si cada variable aumenta o disminuye la predicción.
+
+Este ranking explica el **Random Forest**, no los coeficientes de la regresión lineal. El notebook no calcula R², RMSE o MAE para el bosque, por lo que aún no permite comparar su desempeño predictivo con el modelo lineal.
 
 ### Regresión lineal: predecir la puntuación
 
@@ -130,19 +144,20 @@ Este análisis es exploratorio sobre la muestra completa. No sustituye la evalua
 
 ## 6. Ajuste y mejora: estado actual
 
-El notebook contiene una configuración por modelo. **Todavía no ejecuta comparación de hiperparámetros, validación cruzada ni una segunda alternativa para la misma tarea.** Random Forest se menciona en la introducción, pero no está implementado.
+El notebook incorpora Random Forest y SHAP como análisis exploratorio, pero conserva los tres predictores de regresión. **No ejecuta una comparación de métricas antes y después de un ajuste**, búsqueda de hiperparámetros ni validación cruzada.
 
-Para completar la etapa 7 de la guía, falta realizar un ajuste y documentar su resultado: por ejemplo, comparar conjuntos de variables mediante validación cruzada sobre entrenamiento y evaluar la alternativa seleccionada en prueba. No se reportan mejoras que aún no se han ejecutado.
+Para completar la etapa 7 de la guía, falta probar una alternativa y documentar su desempeño. Por ejemplo, comparar la regresión con tres variables frente a una con duración y estrés mediante validación cruzada sobre entrenamiento. El ranking SHAP calculado en prueba debe tratarse como explicación posterior; si se usa para seleccionar variables, esa partición deja de ser una prueba independiente y se necesita una evaluación final no utilizada en la selección.
 
 ## 7. Conclusiones y límites
 
+- En el Random Forest exploratorio, duración del sueño y estrés tienen las mayores contribuciones medias según SHAP.
 - Tres predictores permiten estimar la puntuación con un MAE de 0,334 puntos en la partición evaluada.
 - La clasificación alcanza 87 aciertos de 94, pero sus etiquetas deben corregirse para comunicar adecuadamente los resultados.
 - Una sola partición y 374 registros no permiten asegurar el mismo desempeño en otras poblaciones. No se ha demostrado ausencia de sobreajuste.
-- Deben confirmarse procedencia, licencia y naturaleza sintética de los datos. Los resultados son académicos; no validan un sistema de diagnóstico.
+- Deben documentarse la licencia y las modificaciones del CSV respecto a la fuente. Los resultados son académicos; no validan un sistema de diagnóstico.
 - Las salidas sugieren una posible inversión de los nombres de presión arterial: la columna llamada diastólica contiene valores como 126 y la llamada sistólica, 83. Debe contrastarse con el CSV original.
 
-**Procedencia de las métricas:** salidas guardadas en el notebook adjunto. No se ha repetido la ejecución completa porque el CSV utilizado no está incluido en los archivos disponibles.
+**Procedencia de las métricas y del ranking SHAP:** salidas guardadas en el archivo corregido `Pproyecto_Machine_Learning.ipynb`. No se ha repetido la ejecución completa porque el CSV utilizado no está incluido en los archivos disponibles.
 
 ## 8. Archivos del repositorio
 
@@ -155,9 +170,23 @@ Para completar la etapa 7 de la guía, falta realizar un ajuste y documentar su 
 
 ## 9. Cómo ejecutar
 
+### Preparación del repositorio y corrección de importación
+
+1. Reemplazar el notebook anterior por el archivo correcto recibido como `Pproyecto_Machine_Learning.ipynb`, guardándolo en GitHub con el nombre **`Proyecto_Machine_Learning.ipynb`** para conservar los enlaces de este README.
+2. Reemplazar `Readme.md` por `README.md`, agregar `requirements.txt` y publicar el CSV exacto dentro de `datos/`.
+3. Añadir en la celda de importaciones la línea que falta en el archivo recibido:
+
+   ```python
+   from sklearn.ensemble import RandomForestRegressor
+   ```
+
+   Sin esa importación, una sesión nueva fallará al crear el bosque, aunque el notebook tenga salidas guardadas. `RandomForestRegressor` pertenece a `scikit-learn`; no se instala como paquete separado.
+4. Corregir los nombres del reporte y la matriz de clasificación a `['Con problemas de sueño (0)', 'Sin trastorno registrado (1)']`, conservando la codificación actual y comprobando el significado de los `NaN`.
+
+
 ### Google Colab: compatible con el código actual
 
-1. Abrir el notebook con el enlace del inicio y guardar una copia en Drive.
+1. Abrir el notebook actualizado con el enlace del inicio y guardar una copia en Drive. Subir `requirements.txt` al entorno de Colab y ejecutar `%pip install -r /content/requirements.txt` antes de importar las librerías.
 2. Subir el **CSV exacto utilizado por el grupo** a la raíz de «Mi unidad», con el nombre `Sleep_health_and_lifestyle_dataset.csv`.
 3. Ejecutar las celdas en orden y autorizar el montaje de Drive. El notebook lee:
 
@@ -166,7 +195,7 @@ Para completar la etapa 7 de la guía, falta realizar un ajuste y documentar su 
    ```
 
 4. Comprobar que la carga devuelve `(374, 14)`. Si aparece una sola columna, revisar el separador. Conservar los nombres de columnas, incluidos los espacios finales de presión arterial.
-5. Ejecutar todo y comprobar las tablas y métricas de este README. Si falta alguna dependencia, subir `requirements.txt` a Colab y ejecutar `%pip install -r /content/requirements.txt`.
+5. Ejecutar todo desde una sesión nueva y comprobar las tablas, los gráficos SHAP y las métricas de este README.
 
 ### Ejecución local con Jupyter
 
@@ -187,5 +216,7 @@ Para completar la etapa 7 de la guía, falta realizar un ajuste y documentar su 
    ```
 
 4. Ejecutar todas las demás celdas en orden.
+
+`requirements.txt` incluye `shap` para las explicaciones, `ipython` para su inicialización visual y `notebook` para la ejecución local. Las importaciones de `google.colab` corresponden al entorno de Colab y se omiten en local.
 
 Las versiones originales de las dependencias no quedaron registradas. `requirements.txt` declara las librerías necesarias, pero no garantiza resultados idénticos entre versiones.
