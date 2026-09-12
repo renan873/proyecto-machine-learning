@@ -141,15 +141,6 @@ El archivo correcto recibido como `Pproyecto_Machine_Learning.ipynb` debe reempl
 ## 10. Cómo ejecutar
 
 ### Preparación
-
-Añadir en la celda de importaciones la línea que falta en el notebook recibido:
-
-```python
-from sklearn.ensemble import RandomForestRegressor
-```
-
-Sin esta línea, una sesión nueva fallará al crear el bosque. Esta clase pertenece a `scikit-learn`; no es un paquete separado.
-
 ### Google Colab
 
 1. Abrir el notebook actualizado desde el enlace del inicio y guardar una copia en Drive.
