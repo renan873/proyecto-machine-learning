@@ -1,4 +1,4 @@
-# Dependencias utilizadas por el notebook y ejecución local con Jupyter.
+# Dependencias del notebook corregido, incluidas SHAP y ejecución local.
 # Las versiones del entorno original no fueron registradas.
 numpy
 pandas
@@ -6,4 +6,6 @@ matplotlib
 scipy
 statsmodels
 scikit-learn
+shap
+ipython
 notebook
