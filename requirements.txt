@@ -1,0 +1,9 @@
+# Dependencias utilizadas por el notebook y ejecución local con Jupyter.
+# Las versiones del entorno original no fueron registradas.
+numpy
+pandas
+matplotlib
+scipy
+statsmodels
+scikit-learn
+notebook
