@@ -1,4 +1,4 @@
-# Predicción de la calidad del sueño y clasificación de trastornos
+# Predicción de la calidad del sueño 
 
 Proyecto integrador de **Aprendizaje Automático y Minería de Datos**, Maestría en Gestión y Analítica de Datos.  
 **Docente:** Adriana Collaguazo Jaramillo, Mg.
